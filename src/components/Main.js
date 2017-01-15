@@ -12,7 +12,7 @@ var imageDatas = require('../data/imagesData.json');
  *param:imagesArrar(Array)文件的配置信息（不包含文件的路径）
  *result:拼接后的完整的图片信息
  */
-imageDatas = (function(imagesArrar) {
+imageDatas = ((imagesArrar) => {
     for (var i = imagesArrar.length - 1; i >= 0; i--) {
         var singleImage = imagesArrar[i];
         singleImage.imgUrl = require('../images/' + singleImage.fileName); //生成单个文件完整路径
@@ -25,33 +25,41 @@ imageDatas = (function(imagesArrar) {
 /**
  *单个图像组件
  */
-class imageFigure extends React.Component {
+class ImageFigure extends React.Component {
+    constructor(props) {
+        super(props);
+    };
     render() {
-        return ( < figure >
-            < img src = { this.props.data.imgUrl }
-            alt = { this.props.data.title }
-            / > < figCaption > < h2 >{this.props.data.title} < /h2 > < /figCaption > < /figure >
-
-        );
-    }
-};
-
-class AppComponent extends React.Component {
-    render() {
-        //存储图片和控件集合
-        var imageSecList = [],
-            controlList = [];
-
-        imageDatas.foreach(function(value) {
-            imageSecList.push( < imageFigure data = {value }/ > )
-        });
-
-        return ( < section className = "stage" >
-            < section className = "img_sec" > { imageDatas } < /section> < nav className = 'controller_nav' > < /nav > < /section>
-        );
+        return ( < figure className="img-figure" >
+            < img src = { this.props.data.imgUrl } alt = { this.props.data.title }/ >  
+             < figcaption > 
+             < h2 className="img-title" > { this.props.data.title } < /h2 >
+             < /figcaption >
+              < /figure >
+        )
     }
 }
 
-AppComponent.defaultProps = {};
+class AppComponent extends React.Component {
+        constructor(props) {
+            super(props);
+        }
+        render() {
+                //存储图片和控件集合
+                var imageSecList = [];
+                var controlList = [];
 
-export default AppComponent;
+                imageDatas.forEach((value, index) => {
+                        imageSecList.push( < ImageFigure data = { value }
+                            key = { index }
+                            />);
+                        });
+
+                    return ( < section className = "stage" >
+                        < section className = "img_sec" > { imageSecList } < /section > < nav className = "controller_nav" > { controlList } < /nav > < /section> )
+                    }
+                }
+
+
+                AppComponent.defaultProps = {};
+                export default AppComponent;
