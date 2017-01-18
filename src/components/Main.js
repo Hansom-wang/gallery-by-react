@@ -2,6 +2,7 @@ require('normalize.css/normalize.css');
 require('styles/App.scss');
 
 import React from 'react';
+import ReactDom from 'react-dom';
 
 //载入文件配置信息
 var imageDatas = require('../data/imagesData.json');
@@ -22,40 +23,199 @@ imageDatas = ((imagesArrar) => {
 
 })(imageDatas);
 
+
 /**
  *单个图像组件
  */
 class ImageFigure extends React.Component {
     constructor(props) {
         super(props);
-    };
+    }
     render() {
-        return ( < figure className="img-figure" >
-            < img src = { this.props.data.imgUrl } alt = { this.props.data.title }/ >  
-             < figcaption > 
-             < h2 className="img-title" > { this.props.data.title } < /h2 >
-             < /figcaption >
-              < /figure >
+        var styleObj = {};
+        if (this.props.arrange.pos) {
+            styleObj = this.props.arrange.pos;
+        }
+        return ( < figure className = "img-figure"  style = { styleObj }>
+            < img src = { this.props.data.imgUrl }
+            alt = { this.props.data.title }
+           
+            / >   < figcaption > < h2 className = "img-title" > { this.props.data.title } < /h2 > < /figcaption > < /figure >
         )
     }
 }
 
+/**
+ *获取指定范围内的随机值
+ *@parama low左侧范围 high右侧范围
+ */
+function GetArrayRandom(low, high) {
+    return Math.ceil(Math.random() * (high - low) + low);
+}
+
 class AppComponent extends React.Component {
+        //构造函数
         constructor(props) {
             super(props);
+            //存放位置常量
+            this.Constant = {
+                centerPos: //居中位置
+                {
+                    left: 0,
+                    top: 0
+                },
+                hPosRange: //水平方向
+                {
+                    leftSecX: [0, 0],
+                    rightSexX: [0, 0],
+                    y: [0, 0]
+                },
+                vPosRange: //垂直方向的范围
+                {
+                    x: [0, 0],
+                    topY: [0, 0]
+                }
+
+
+            };
+            this.state = //存储图片位置信息
+                {
+                    imagesArrayageArr: []
+                }
         }
+
+
+        /**
+         *重新布局所有图片
+         *@parama centerindex 指定居中排布哪个图片
+         */
+        Rearrange(centerindex) {
+
+            let imagesArrayageArr = this.state.imagesArrayageArr,
+                constant = this.Constant,
+                centerPos = constant.centerPos,
+                hPosRange = constant.hPosRange,
+                vPosRange = constant.vPosRange,
+
+                hPosRangeLeftSecX = hPosRange.leftSecX,
+                hPosRangeRightSecX = hPosRange.rightSexX,
+                hPosRangeY = hPosRange.y,
+                vPosRangeTopY = vPosRange.topY,
+                vPosRangeX = vPosRange.x,
+
+                imagesArrayTopArr = [], //存放在上部图片的信息
+                topNum = Math.floor(Math.random() * 2), //取一个或者零个图片
+                imagesArrayTopIndex = 0, //顶部的图片开始的索引
+
+                imagesArrayCenterArr = imagesArrayageArr.splice(centerindex, 1); //得到中心图片的信息
+
+            imagesArrayCenterArr[0] = {pos:centerPos}; //中间图片的信息
+
+
+            //放在上部的图片信息
+            imagesArrayTopIndex = Math.ceil(Math.random() * (imagesArrayageArr.length - topNum));
+            imagesArrayTopArr = imagesArrayageArr.splice(imagesArrayTopIndex, topNum);
+
+            imagesArrayTopArr.forEach((value, index) => {
+                imagesArrayTopArr[index].pos = {
+                    top: GetArrayRandom(vPosRangeTopY[0],
+                        vPosRangeTopY[1]),
+                    left: GetArrayRandom(vPosRangeX[0], vPosRangeX[1])
+                }
+            });
+
+            //处理放在左右两侧的图片信息
+            for (let i = 0, j = imagesArrayageArr.length, k = j / 2; i < j; i++) {
+                let hPosRangeLOR = null;
+                if (i < k) {
+                    hPosRangeLOR = hPosRangeLeftSecX;
+                } else {
+                    hPosRangeLOR = hPosRangeRightSecX;
+                }
+                imagesArrayageArr[i].pos = {
+                    left: GetArrayRandom(hPosRangeLOR[0], hPosRangeLOR[1]),
+                    top: GetArrayRandom(hPosRangeY[0], hPosRangeY[1])
+                }
+
+            }
+
+            //将剔除出来的图片重新填回去
+            if (imagesArrayTopArr && imagesArrayTopArr[0]) {
+                imagesArrayageArr.splice(imagesArrayTopIndex, 0, imagesArrayTopArr[0]);
+            }
+
+            imagesArrayageArr.splice(centerindex, 0, imagesArrayCenterArr[0]);
+
+            this.setState({
+                imagesArrayageArr: imagesArrayageArr
+
+            });
+
+
+
+        }
+
+        //钩子函数，图片加载完成后，为每张图片安排位置
+        componentDidMount() {
+            //获取舞台大小
+            let stage = ReactDom.findDOMNode(this.refs.stage),
+                stageW = stage.scrollWidth,
+                stageH = stage.scrollHeight,
+                halfStageH = Math.ceil(stageH / 2),
+                halfStageW = Math.ceil(stageW / 2);
+
+            //获取imagefigure的大小
+            let imageFigureDom = ReactDom.findDOMNode(this.refs.imageFigure0),
+                figureW = imageFigureDom.scrollWidth,
+                figureH = imageFigureDom.scrollHeight,
+                halfFigureW = Math.ceil(figureW / 2),
+                halfFigureH = Math.ceil(figureH / 2);
+
+
+            //计算中心点的位置
+            this.Constant.centerPos.left = halfStageW - halfFigureW;
+            this.Constant.centerPos.top = halfStageH - halfFigureH
+
+            //计算左边、右边图片的排布位置
+            this.Constant.hPosRange.leftSecX[0] = -halfFigureW;
+            this.Constant.hPosRange.leftSecX[1] = halfStageW - halfFigureW * 3;
+            this.Constant.hPosRange.rightSexX[0] = halfStageW + halfFigureW;
+            this.Constant.hPosRange.rightSexX[1] = stageW - halfFigureW;
+            this.Constant.hPosRange.y[0] = -halfFigureH;
+            this.Constant.hPosRange.y[1] = stageH - halfFigureH;
+
+            //计算中间上部的图片排布范围
+            this.Constant.vPosRange.x[0] = halfStageW - figureW;
+            this.Constant.vPosRange.x[1] = halfStageW + figureW;
+            this.Constant.vPosRange.topY[0] = -halfFigureH;
+            this.Constant.vPosRange.topY[1] = halfStageH - halfFigureH * 3;
+
+            this.Rearrange(0);
+        }
+
         render() {
                 //存储图片和控件集合
                 var imageSecList = [];
                 var controlList = [];
 
                 imageDatas.forEach((value, index) => {
+                        if (!this.state.imagesArrayageArr[index]) {
+                            this.state.imagesArrayageArr[index] = {
+                                pos: {
+                                    left: 0,
+                                    top: 0
+                                }
+                            }
+                        }
                         imageSecList.push( < ImageFigure data = { value }
                             key = { index }
+                            ref = { 'imageFigure' + index }
+                            arrange = { this.state.imagesArrayageArr[index] }
                             />);
                         });
 
-                    return ( < section className = "stage" >
+                    return ( < section className = "stage"
+                        ref = "stage" >
                         < section className = "img_sec" > { imageSecList } < /section > < nav className = "controller_nav" > { controlList } < /nav > < /section> )
                     }
                 }
