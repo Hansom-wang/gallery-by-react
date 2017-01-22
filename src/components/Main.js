@@ -39,7 +39,12 @@ class ImageFigure extends React.Component {
 
         e.stopPropgation;
         e.preventDefault;
-        this.props.inverse();
+        if (this.props.arrange.isCenter) //如果是居中则翻转
+        {
+            this.props.inverse();
+        } else {
+            this.props.center();
+        }
 
 
 
@@ -57,6 +62,9 @@ class ImageFigure extends React.Component {
             });
         }
 
+        if (this.props.arrange.isCenter) {
+            styleObj.zIndex = 11;
+        }
         var imageFigureClassName = 'img-figure';
         imageFigureClassName += this.props.arrange.isInverse ? ' is-inverse' : '';
 
@@ -70,6 +78,24 @@ class ImageFigure extends React.Component {
             onClick = { this.handleClick } >
             < p > { this.props.data.desc } < /p> < /div > < /figcaption > < /figure >
         )
+    }
+}
+
+/**
+ *底部控制按钮组件
+ */
+class ControllerUnit extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        let controllerUnitClassName = "control-unit";
+
+        if (this.props.arrange.isCenter) {
+
+        }
+
+        return <span className = { controllerUnitClassName } >< /span>
     }
 }
 
@@ -139,74 +165,81 @@ class AppComponent extends React.Component {
          */
         Rearrange(centerindex) {
 
-            let imagesArrayageArr = this.state.imagesArrayageArr,
-                constant = this.Constant,
-                centerPos = constant.centerPos,
-                hPosRange = constant.hPosRange,
-                vPosRange = constant.vPosRange,
+                let imagesArrayageArr = this.state.imagesArrayageArr,
+                    constant = this.Constant,
+                    centerPos = constant.centerPos,
+                    hPosRange = constant.hPosRange,
+                    vPosRange = constant.vPosRange,
 
-                hPosRangeLeftSecX = hPosRange.leftSecX,
-                hPosRangeRightSecX = hPosRange.rightSexX,
-                hPosRangeY = hPosRange.y,
-                vPosRangeTopY = vPosRange.topY,
-                vPosRangeX = vPosRange.x,
+                    hPosRangeLeftSecX = hPosRange.leftSecX,
+                    hPosRangeRightSecX = hPosRange.rightSexX,
+                    hPosRangeY = hPosRange.y,
+                    vPosRangeTopY = vPosRange.topY,
+                    vPosRangeX = vPosRange.x,
 
-                imagesArrayTopArr = [], //存放在上部图片的信息
-                topNum = Math.floor(Math.random() * 2), //取一个或者零个图片
-                imagesArrayTopIndex = 0, //顶部的图片开始的索引
+                    imagesArrayTopArr = [], //存放在上部图片的信息
+                    topNum = Math.floor(Math.random() * 2), //取一个或者零个图片
+                    imagesArrayTopIndex = 0, //顶部的图片开始的索引
 
-                imagesArrayCenterArr = imagesArrayageArr.splice(centerindex, 1); //得到中心图片的信息
+                    imagesArrayCenterArr = imagesArrayageArr.splice(centerindex, 1); //得到中心图片的信息
 
-            imagesArrayCenterArr[0] = { pos: centerPos, rotate: 0 }; //中间图片的信息
+                imagesArrayCenterArr[0] = { pos: centerPos, rotate: 0, isCenter: true }; //中间图片的信息
 
 
-            //放在上部的图片信息
-            imagesArrayTopIndex = Math.ceil(Math.random() * (imagesArrayageArr.length - topNum));
-            imagesArrayTopArr = imagesArrayageArr.splice(imagesArrayTopIndex, topNum);
+                //放在上部的图片信息
+                imagesArrayTopIndex = Math.ceil(Math.random() * (imagesArrayageArr.length - topNum));
+                imagesArrayTopArr = imagesArrayageArr.splice(imagesArrayTopIndex, topNum);
 
-            imagesArrayTopArr.forEach((value, index) => {
-                imagesArrayTopArr[index] = {
-                    pos: {
-                        top: GetArrayRandom(vPosRangeTopY[0],
-                            vPosRangeTopY[1]),
-                        left: GetArrayRandom(vPosRangeX[0], vPosRangeX[1])
-                    },
-                    rotate: Get30DegRandom()
+                imagesArrayTopArr.forEach((value, index) => {
+                    imagesArrayTopArr[index] = {
+                        pos: {
+                            top: GetArrayRandom(vPosRangeTopY[0],
+                                vPosRangeTopY[1]),
+                            left: GetArrayRandom(vPosRangeX[0], vPosRangeX[1])
+                        },
+                        rotate: Get30DegRandom()
+                    }
+                });
+
+                //处理放在左右两侧的图片信息
+                for (let i = 0, j = imagesArrayageArr.length, k = j / 2; i < j; i++) {
+                    let hPosRangeLOR = null;
+                    if (i < k) {
+                        hPosRangeLOR = hPosRangeLeftSecX;
+                    } else {
+                        hPosRangeLOR = hPosRangeRightSecX;
+                    }
+                    imagesArrayageArr[i] = {
+                        pos: {
+                            left: GetArrayRandom(hPosRangeLOR[0], hPosRangeLOR[1]),
+                            top: GetArrayRandom(hPosRangeY[0], hPosRangeY[1])
+                        },
+                        rotate: Get30DegRandom()
+                    }
+
                 }
-            });
 
-            //处理放在左右两侧的图片信息
-            for (let i = 0, j = imagesArrayageArr.length, k = j / 2; i < j; i++) {
-                let hPosRangeLOR = null;
-                if (i < k) {
-                    hPosRangeLOR = hPosRangeLeftSecX;
-                } else {
-                    hPosRangeLOR = hPosRangeRightSecX;
-                }
-                imagesArrayageArr[i] = {
-                    pos: {
-                        left: GetArrayRandom(hPosRangeLOR[0], hPosRangeLOR[1]),
-                        top: GetArrayRandom(hPosRangeY[0], hPosRangeY[1])
-                    },
-                    rotate: Get30DegRandom()
+                //将剔除出来的图片重新填回去
+                if (imagesArrayTopArr && imagesArrayTopArr[0]) {
+                    imagesArrayageArr.splice(imagesArrayTopIndex, 0, imagesArrayTopArr[0]);
                 }
 
+                imagesArrayageArr.splice(centerindex, 0, imagesArrayCenterArr[0]);
+
+                this.setState({
+                    imagesArrayageArr: imagesArrayageArr
+
+                });
             }
-
-            //将剔除出来的图片重新填回去
-            if (imagesArrayTopArr && imagesArrayTopArr[0]) {
-                imagesArrayageArr.splice(imagesArrayTopIndex, 0, imagesArrayTopArr[0]);
-            }
-
-            imagesArrayageArr.splice(centerindex, 0, imagesArrayCenterArr[0]);
-
-            this.setState({
-                imagesArrayageArr: imagesArrayageArr
-
-            });
-
-
-
+            /**
+             *居中选中的图片
+             *@parama index 选中图片的索引
+             */
+        center(index) {
+            return function() {
+                this.Rearrange(index);
+                debugger;
+            }.bind(this);
         }
 
         //钩子函数，图片加载完成后，为每张图片安排位置
@@ -253,30 +286,38 @@ class AppComponent extends React.Component {
                 var controlList = [];
 
                 imageDatas.forEach((value, index) => {
-                        if (!this.state.imagesArrayageArr[index]) {
-                            this.state.imagesArrayageArr[index] = {
-                                pos: {
-                                    left: 0,
-                                    top: 0
-                                },
-                                rotate: 0, //选择属性
-                                isInverse: false //是否反转
+                            if (!this.state.imagesArrayageArr[index]) {
+                                this.state.imagesArrayageArr[index] = {
+                                    pos: {
+                                        left: 0,
+                                        top: 0
+                                    },
+                                    rotate: 0, //选择属性
+                                    isInverse: false, //是否反转
+                                    isCenter: false
+                                }
+                            }
+                            imageSecList.push( < ImageFigure data = { value }
+                                key = { index }
+                                ref = { 'imageFigure' + index }
+                                arrange = { this.state.imagesArrayageArr[index] }
+                                inverse = { this.inverse(index) }
+                                center = { this.center(index) }
+                                />);
+
+                                controlList.push( < ControllerUnit key = { index }
+                                    arrange = { this.state.imagesArrayageArr[index] }
+                                    inverse = { this.inverse(index) }
+                                    center = { this.center(index) }
+                                    />);
+                                });
+
+                            return ( < section className = "stage"
+                                ref = "stage" >
+                                < section className = "img_sec" > { imageSecList } < /section > < nav className = "controller_nav" > { controlList } < /nav > < /section> )
                             }
                         }
-                        imageSecList.push( < ImageFigure data = { value }
-                            key = { index }
-                            ref = { 'imageFigure' + index }
-                            arrange = { this.state.imagesArrayageArr[index] }
-                            inverse = { this.inverse(index) }
-                            />);
-                        });
-
-                    return ( < section className = "stage"
-                        ref = "stage" >
-                        < section className = "img_sec" > { imageSecList } < /section > < nav className = "controller_nav" > { controlList } < /nav > < /section> )
-                    }
-                }
 
 
-                AppComponent.defaultProps = {};
-                export default AppComponent;
+                        AppComponent.defaultProps = {};
+                        export default AppComponent;
