@@ -37,8 +37,10 @@ class ImageFigure extends React.Component {
          */
     handleClick(e) {
 
-        e.stopPropgation;
-        e.preventDefault;
+        //阻止事件冒泡
+        e.stopPropagation();
+        e.preventDefault();
+        
         if (this.props.arrange.isCenter) //如果是居中则翻转
         {
             this.props.inverse();
@@ -57,16 +59,17 @@ class ImageFigure extends React.Component {
         }
 
         if (this.props.arrange.rotate) {
-            (['ms', 'mos', 'Webkit', '']).forEach((value) => {
-                styleObj[value + 'Transform'] = 'rotate(' + this.props.arrange.rotate + 'deg)';
+            (['msTransform', 'MosTransform', 'WebkitTransform', 'transform']).forEach((value) => {
+                styleObj[value] = 'rotate(' + this.props.arrange.rotate + 'deg)';
             });
         }
 
         if (this.props.arrange.isCenter) {
             styleObj.zIndex = 11;
         }
-        var imageFigureClassName = 'img-figure';
+        let imageFigureClassName = 'img-figure';
         imageFigureClassName += this.props.arrange.isInverse ? ' is-inverse' : '';
+
 
         return ( < figure className = { imageFigureClassName }
             onClick = { this.handleClick }
@@ -86,16 +89,37 @@ class ImageFigure extends React.Component {
  */
 class ControllerUnit extends React.Component {
     constructor(props) {
-        super(props);
-    }
-    render() {
-        let controllerUnitClassName = "control-unit";
+            super(props);
+            this.handleClick = this.handleClick.bind(this);
+        }
+        /**
+         *鼠标点击事件
+         */
+    handleClick(e) {
+        e.stopPropagation();
+        e.preventDefault();
 
         if (this.props.arrange.isCenter) {
+            this.props.inverse();
+        } else {
+            this.props.center();
+        }
+    }
+    render() {
+        let controllerUnitClassName = 'control-unit';
 
+        if (this.props.arrange.isCenter) {
+            controllerUnitClassName += ' is-center';
+
+
+            if (this.props.arrange.isInverse) {
+                controllerUnitClassName += ' is-inverse';
+            }
         }
 
-        return <span className = { controllerUnitClassName } >< /span>
+
+        return <span className = { controllerUnitClassName }
+        onClick = { this.handleClick } > < /span>
     }
 }
 
@@ -148,12 +172,11 @@ class AppComponent extends React.Component {
              */
         inverse(index) {
             return function() {
-                var imagesArrayageArr = this.state.imagesArrayageArr;
-
+                let imagesArrayageArr = this.state.imagesArrayageArr;
+                debugger;
                 imagesArrayageArr[index].isInverse = !imagesArrayageArr[index].isInverse;
 
                 this.setState({
-
                     imagesArrayageArr: imagesArrayageArr
                 });
             }.bind(this);
@@ -248,15 +271,15 @@ class AppComponent extends React.Component {
             let stage = ReactDom.findDOMNode(this.refs.stage),
                 stageW = stage.scrollWidth,
                 stageH = stage.scrollHeight,
-                halfStageH = Math.ceil(stageH / 2),
-                halfStageW = Math.ceil(stageW / 2);
+                halfStageH = Math.floor(stageH / 2),
+                halfStageW = Math.floor(stageW / 2);
 
             //获取imagefigure的大小
             let imageFigureDom = ReactDom.findDOMNode(this.refs.imageFigure0),
                 figureW = imageFigureDom.scrollWidth,
                 figureH = imageFigureDom.scrollHeight,
-                halfFigureW = Math.ceil(figureW / 2),
-                halfFigureH = Math.ceil(figureH / 2);
+                halfFigureW = Math.floor(figureW / 2),
+                halfFigureH = Math.floor(figureH / 2);
 
 
             //计算中心点的位置
@@ -273,7 +296,7 @@ class AppComponent extends React.Component {
 
             //计算中间上部的图片排布范围
             this.Constant.vPosRange.x[0] = halfStageW - figureW;
-            this.Constant.vPosRange.x[1] = halfStageW + figureW;
+            this.Constant.vPosRange.x[1] = halfStageW;
             this.Constant.vPosRange.topY[0] = -halfFigureH;
             this.Constant.vPosRange.topY[1] = halfStageH - halfFigureH * 3;
 
